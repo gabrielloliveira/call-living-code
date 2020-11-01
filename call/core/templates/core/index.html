@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<h1>Lista de Contatos</h1>
+<form action="" method="post" id="form-cadastro">
+  {% csrf_token %}
+  <input type="text" name="name" placeholder="Digite o nome" id="input">
+  <p style="display: none" id="help"></p>
+  <button>Cadastrar</button>
+</form>
+<ul id="list-persons">
+  {% for person in persons %}
+    <li>{{ person.name }}</li>
+  {% empty %}
+    <li>Você não tem contatos</li>
+  {% endfor %}
+</ul>
+<script>
+    {#const form = document.getElementById('form-cadastro')#}
+    const input = document.getElementById('input')
+    const p = document.getElementById('help')
+    input.addEventListener('keyup', novo_ajax)
+
+
+    function novo_ajax() {
+        var myHeaders = new Headers();
+        myHeaders.append("HTTP_X_REQUESTED_WITH", "XMLHttpRequest");
+        fetch(`{% url 'core:search-user' %}?name=${input.value}`, {
+            method: "GET",
+            headers: myHeaders
+        })
+            .then(response => {
+                response.json().then(result => {
+                    console.log(result)
+                    if (!result.can_add) {
+                        p.innerText = result.message
+                        p.setAttribute('style', 'color: red')
+                    } else {
+                        p.setAttribute('style', 'display: none')
+                    }
+                })
+            })
+            .catch(error => {
+                console.log('deu erro', error)
+            })
+    }
+
+    function ajax_raiz() {
+        var xhr = new XMLHttpRequest();
+
+        xhr.open('GET', `{% url 'core:search-user' %}?name=${input.value}`, true);
+        xhr.send();
+        xhr.onload = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var result = JSON.parse(xhr.response)
+                if (!result.can_add) {
+                    p.innerText = result.message
+                    p.setAttribute('style', 'color: red')
+                } else {
+                    p.setAttribute('style', 'display: none')
+                }
+            }
+        }
+    }
+
+    {#form.addEventListener('submit', (event) => {#}
+    {#    const data = new FormData(form)#}
+    {#    event.preventDefault()#}
+    {##}
+    {#    const headers = {#}
+    {#        method: "POST",#}
+    {#        body: data,#}
+    {#        headers: {#}
+    {#            'csrfmiddlewaretoken': '{{ csrf_token }}'#}
+    {#        }#}
+    {#    }#}
+    {##}
+    {#    fetch('/api/person/', headers)#}
+    {#        .then(response => {#}
+    {#response.json().then(result => {#}
+    {#const ul = document.getElementById('list-persons')#}
+    {#const li = document.createElement("li")#}
+    {#li.innerText = result.data#}
+    {#ul.appendChild(li)#}
+    {#            //})#}
+    {#            console.log(response)#}
+    {#        })#}
+    {#        .catch(error => {#}
+    {#            console.log('deu erro', error)#}
+    {#        })#}
+    {##}
+    //)
+</script>
+</body>
+</html>
